@@ -157,19 +157,9 @@ connect a service to each of them.
 
 #### Create the services
 
-1.  On `manager`, create a new overlay network called `nginx-net`:
-
-    ```bash
-    $ docker network create -d overlay nginx-net
-    ```
-
-    You don't need to create the overlay network on the other nodes, because it
-    will be automatically created when one of those nodes starts running a
-    service task which requires it.
-
-2.  On `manager`, create a 5-replica Nginx service connected to `nginx-net`. The
-    service will publish port 80 to the outside world. All of the service
-    task containers can communicate with each other without opening any ports.
+1.  On `manager`, create a 5-replica Nginx service. The
+    service will publish port 80 to the outside world, and it will be connected to the default ingress network. 
+    All of the service task containers can communicate with each other without opening any ports.
 
     > **Note**: Services can only be created on a manager.
 
@@ -178,7 +168,6 @@ connect a service to each of them.
       --name my-nginx \
       --publish target=80,published=80 \
       --replicas=5 \
-      --network nginx-net \
       nginx
       ```
 
@@ -194,7 +183,7 @@ connect a service to each of them.
 3.  Run `docker service ls` to monitor the progress of service bring-up, which
     may take a few seconds.
 
-4.  Inspect the `nginx-net` network on `manager`, `worker-1`, and `worker-2`.
+4.  Inspect the `ingress` network on `manager`, `worker-1`, and `worker-2`.
     Remember that you did not need to create it manually on `worker-1` and
     `worker-2` because Docker created it for you. The output will be long, but
     notice the `Containers` and `Peers` sections. `Containers` lists all
@@ -205,36 +194,11 @@ connect a service to each of them.
     and notice the information about the ports and endpoints used by the
     service.
 
-6.  Create a new network `nginx-net-2`, then update the service to use this
-    network instead of `nginx-net`:
-
-    ```bash
-    $ docker network create -d overlay nginx-net-2
-    ```
-
-    ```bash
-    $ docker service update \
-      --network-add nginx-net-2 \
-      --network-rm nginx-net \
-      my-nginx
-    ```
-
-7.  Run `docker service ls` to verify that the service has been updated and all
-    tasks have been redeployed. Run `docker network inspect nginx-net` to verify
-    that no containers are connected to it. Run the same command for
-    `nginx-net-2` and notice that all the service task containers are connected
-    to it.
-
-    > **Note**: Even though overlay networks are automatically created on swarm
-    > worker nodes as needed, they are not automatically removed.
-
-8.  Clean up the service and the networks. From `manager`, run the following
-    commands. The manager will direct the workers to remove the networks
-    automatically.
+6.  Clean up the service. From `manager`, run the following
+    commands. 
 
     ```bash
     $ docker service rm my-nginx
-    $ docker network rm nginx-net nginx-net-2
     ```
 
 ## Use a user-defined overlay network
